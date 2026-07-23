@@ -1,9 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// This script defines 'Enemy's' health and behavior. 
+/// This script defines 'Enemy's' health and behavior.
+/// Health/damage logic lives in EnemyHealthSystem (plain C#, unit-tested separately);
+/// this MonoBehaviour wraps it and keeps the original public API unchanged.
 /// </summary>
 public class Enemy : MonoBehaviour {
 
@@ -17,10 +19,20 @@ public class Enemy : MonoBehaviour {
     [Tooltip("VFX prefab generating after destruction")]
     public GameObject destructionVFX;
     public GameObject hitEffect;
-    
+
     [HideInInspector] public int shotChance; //probability of 'Enemy's' shooting during tha path
     [HideInInspector] public float shotTimeMin, shotTimeMax; //max and min time for shooting from the beginning of the path
     #endregion
+
+    private EnemyHealthSystem _healthSystem;
+
+    public int CurrentHealth => _healthSystem.CurrentHealth;
+    public int MaxHealth => _healthSystem.MaxHealth;
+
+    private void Awake()
+    {
+        _healthSystem = new EnemyHealthSystem(health);
+    }
 
     private void Start()
     {
@@ -28,23 +40,24 @@ public class Enemy : MonoBehaviour {
     }
 
     //coroutine making a shot
-    void ActivateShooting() 
+    void ActivateShooting()
     {
         if (Random.value < (float)shotChance / 100)                             //if random value less than shot probability, making a shot
-        {                         
-            Instantiate(Projectile,  gameObject.transform.position, Quaternion.identity);             
+        {
+            Instantiate(Projectile,  gameObject.transform.position, Quaternion.identity);
         }
     }
 
     //method of getting damage for the 'Enemy'
-    public void GetDamage(int damage) 
+    public void GetDamage(int damage)
     {
-        health -= damage;           //reducing health for damage value, if health is less than 0, starting destruction procedure
-        if (health <= 0)
+        _healthSystem.TakeDamage(damage);
+        health = _healthSystem.CurrentHealth; //keep inspector-visible field in sync
+        if (_healthSystem.IsDead())
             Destruction();
         else
             Instantiate(hitEffect,transform.position,Quaternion.identity,transform);
-    }    
+    }
 
     //if 'Enemy' collides 'Player', 'Player' gets the damage equal to projectile's damage value
     private void OnTriggerEnter2D(Collider2D collision)
@@ -59,9 +72,9 @@ public class Enemy : MonoBehaviour {
     }
 
     //method of destroying the 'Enemy'
-    void Destruction()                           
-    {        
-        Instantiate(destructionVFX, transform.position, Quaternion.identity); 
+    void Destruction()
+    {
+        Instantiate(destructionVFX, transform.position, Quaternion.identity);
         Destroy(gameObject);
     }
 }
