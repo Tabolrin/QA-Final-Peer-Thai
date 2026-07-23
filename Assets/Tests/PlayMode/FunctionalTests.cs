@@ -30,6 +30,8 @@ public class FunctionalTests
         enemy.Enemy.GetDamage(2); // 2 -> 0, lethal
         yield return null;
         Assert.IsTrue(root == null, "Enemy should be destroyed once cumulative damage reaches its starting health.");
+
+        EnemyTestSceneBuilder.DestroyEnemy(enemy);
     }
 
     [UnityTest]
@@ -43,6 +45,8 @@ public class FunctionalTests
         yield return null;
 
         Assert.IsTrue(root == null, "A single lethal overkill hit should destroy the enemy.");
+
+        EnemyTestSceneBuilder.DestroyEnemy(enemy);
     }
 
     [UnityTest]

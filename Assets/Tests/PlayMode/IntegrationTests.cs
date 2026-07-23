@@ -17,7 +17,6 @@ public class IntegrationTests
         var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 10);
         yield return null;
 
-        int hitEffectClonesBefore = GameObject.FindObjectsByType<Transform>(FindObjectsSortMode.None).Length;
         enemy.Enemy.GetDamage(3);
         yield return null;
 
@@ -39,6 +38,8 @@ public class IntegrationTests
         yield return null; // Destroy() is deferred to end of frame
 
         Assert.IsTrue(root == null, "Enemy GameObject should be destroyed once health reaches zero.");
+
+        EnemyTestSceneBuilder.DestroyEnemy(enemy);
     }
 
     [UnityTest]
