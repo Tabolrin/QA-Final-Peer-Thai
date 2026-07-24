@@ -1,5 +1,6 @@
 using System.Collections;
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.TestTools;
 
 /// <summary>
@@ -69,6 +70,68 @@ public class ShieldTests
 
         Assert.AreEqual(6, enemy.Enemy.CurrentHealth, "With no shield, all damage should reach health directly.");
 
+        EnemyTestSceneBuilder.DestroyEnemy(enemy);
+    }
+
+    [UnityTest]
+    public IEnumerator Enemy_WithShield_TakesExactlySevenSingleDamageHits_ToDestroy()
+    {
+        // Matches real gameplay exactly: the player's laser deals 1 damage per hit.
+        // shieldHealth 5 + health 2 = 5 absorbing hits + 2 health hits = 7 total.
+        var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 2, shieldHealth: 5);
+        var root = enemy.Root;
+        yield return null;
+
+        for (int hit = 1; hit <= 6; hit++)
+        {
+            enemy.Enemy.GetDamage(1);
+            yield return null;
+            Assert.IsTrue(root != null, $"Enemy should still be alive after hit {hit} of 7.");
+        }
+
+        enemy.Enemy.GetDamage(1); // 7th hit
+        yield return null;
+        Assert.IsTrue(root == null, "Enemy should be destroyed exactly on the 7th single-damage hit.");
+    }
+
+    [UnityTest]
+    public IEnumerator Enemy_WithShield_ResetsToNormalSprite_OnceShieldBreaks()
+    {
+        var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 2, shieldHealth: 5);
+        yield return null;
+
+        var spriteRenderer = enemy.Enemy.GetComponent<SpriteRenderer>();
+        Color tintedColor = new Color(0.6f, 0.85f, 1f, 1f); // matches Enemy_shielded.prefab's actual tint
+        spriteRenderer.color = tintedColor;
+
+        for (int hit = 1; hit <= 4; hit++)
+        {
+            enemy.Enemy.GetDamage(1);
+            yield return null;
+        }
+        Assert.AreEqual(tintedColor, spriteRenderer.color, "Sprite should stay tinted while the shield still holds.");
+
+        enemy.Enemy.GetDamage(1); // 5th hit - shield now exactly depleted
+        yield return null;
+        Assert.AreEqual(enemy.Enemy.NormalEnemyColor, spriteRenderer.color,
+            "Sprite should reset to the normal-enemy look the moment the shield breaks.");
+
+        EnemyTestSceneBuilder.DestroyEnemy(enemy);
+    }
+
+    [UnityTest]
+    public IEnumerator Enemy_WithoutShield_SpriteNeverChangesColor()
+    {
+        var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 10); // no shield
+        yield return null;
+
+        var spriteRenderer = enemy.Enemy.GetComponent<SpriteRenderer>();
+        Color originalColor = spriteRenderer.color;
+
+        enemy.Enemy.GetDamage(4);
+        yield return null;
+
+        Assert.AreEqual(originalColor, spriteRenderer.color, "A non-shielded enemy's sprite should never be touched.");
         EnemyTestSceneBuilder.DestroyEnemy(enemy);
     }
 

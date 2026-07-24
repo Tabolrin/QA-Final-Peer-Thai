@@ -31,6 +31,7 @@ public static class EnemyTestSceneBuilder
         // runs, not after.
         var root = new GameObject("Enemy_Test");
         root.SetActive(false);
+        root.AddComponent<SpriteRenderer>();
         var enemy = root.AddComponent<Enemy>();
         enemy.health = health;
         enemy.shieldHealth = shieldHealth;

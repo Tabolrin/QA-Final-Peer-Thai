@@ -25,10 +25,15 @@ public class Enemy : MonoBehaviour, IDamageable {
 
     [HideInInspector] public int shotChance; //probability of 'Enemy's' shooting during tha path
     [HideInInspector] public float shotTimeMin, shotTimeMax; //max and min time for shooting from the beginning of the path
+
+    [Tooltip("Sprite color to reset a shielded enemy to once its shield breaks, so it visually reads as a normal enemy")]
+    public Color NormalEnemyColor = Color.white;
     #endregion
 
     private EnemyHealthSystem _healthSystem;
     private ShieldSystem _shieldSystem;
+    private SpriteRenderer _spriteRenderer;
+    private bool _shieldBrokenVisualApplied;
 
     public int CurrentHealth => _healthSystem.CurrentHealth;
     public int MaxHealth => _healthSystem.MaxHealth;
@@ -39,6 +44,7 @@ public class Enemy : MonoBehaviour, IDamageable {
         _healthSystem = new EnemyHealthSystem(health);
         if (shieldHealth > 0)
             _shieldSystem = new ShieldSystem(shieldHealth);
+        _spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void Start()
@@ -62,6 +68,16 @@ public class Enemy : MonoBehaviour, IDamageable {
             return; // not a real hit - nothing to apply, nothing to show
 
         int remainingDamage = _shieldSystem != null ? _shieldSystem.AbsorbDamage(damage) : damage;
+
+        //the moment the shield breaks, drop the shielded tint so the enemy visually
+        //reads as a normal enemy from here on
+        if (_shieldSystem != null && _shieldSystem.IsBroken() && !_shieldBrokenVisualApplied)
+        {
+            _shieldBrokenVisualApplied = true;
+            if (_spriteRenderer != null)
+                _spriteRenderer.color = NormalEnemyColor;
+        }
+
         if (remainingDamage <= 0)
         {
             // shield absorbed the whole hit: health is untouched, but still
