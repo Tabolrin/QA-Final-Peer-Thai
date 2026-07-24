@@ -67,10 +67,13 @@ public class Wave : MonoBehaviour {
             followComponent.rotationByPath = rotationByPath;
             followComponent.loop = Loop;
             followComponent.SetPath(); 
-            Enemy enemyComponent = newEnemy.GetComponent<Enemy>();  
-            enemyComponent.shotChance = shooting.shotChance; 
-            enemyComponent.shotTimeMin = shooting.shotTimeMin; 
-            enemyComponent.shotTimeMax = shooting.shotTimeMax;
+            Enemy enemyComponent = newEnemy.GetComponent<Enemy>();
+            if (enemyComponent != null) // not every wave-spawned GameObject is an Enemy (e.g. a Boss)
+            {
+                enemyComponent.shotChance = shooting.shotChance;
+                enemyComponent.shotTimeMin = shooting.shotTimeMin;
+                enemyComponent.shotTimeMax = shooting.shotTimeMax;
+            }
             newEnemy.SetActive(true);      
             yield return new WaitForSeconds(timeBetween); 
         }
