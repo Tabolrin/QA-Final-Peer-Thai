@@ -13,6 +13,9 @@ public class Enemy : MonoBehaviour {
     [Tooltip("Health points in integer")]
     public int health;
 
+    [Tooltip("Shield hit points that absorb damage before it reaches health. 0 = no shield.")]
+    public int shieldHealth;
+
     [Tooltip("Enemy's projectile prefab")]
     public GameObject Projectile;
 
@@ -25,13 +28,17 @@ public class Enemy : MonoBehaviour {
     #endregion
 
     private EnemyHealthSystem _healthSystem;
+    private ShieldSystem _shieldSystem;
 
     public int CurrentHealth => _healthSystem.CurrentHealth;
     public int MaxHealth => _healthSystem.MaxHealth;
+    public int CurrentShield => _shieldSystem != null ? _shieldSystem.CurrentShield : 0;
 
     private void Awake()
     {
         _healthSystem = new EnemyHealthSystem(health);
+        if (shieldHealth > 0)
+            _shieldSystem = new ShieldSystem(shieldHealth);
     }
 
     private void Start()
@@ -51,7 +58,11 @@ public class Enemy : MonoBehaviour {
     //method of getting damage for the 'Enemy'
     public void GetDamage(int damage)
     {
-        _healthSystem.TakeDamage(damage);
+        int remainingDamage = _shieldSystem != null ? _shieldSystem.AbsorbDamage(damage) : damage;
+        if (remainingDamage <= 0)
+            return; // fully absorbed by the shield - health is untouched
+
+        _healthSystem.TakeDamage(remainingDamage);
         health = _healthSystem.CurrentHealth; //keep inspector-visible field in sync
         if (_healthSystem.IsDead())
             Destruction();

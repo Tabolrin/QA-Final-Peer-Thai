@@ -19,23 +19,25 @@ public static class EnemyTestSceneBuilder
         public GameObject ProjectilePrefab;
     }
 
-    public static EnemyComponents CreateEnemy(int health = 10)
+    public static EnemyComponents CreateEnemy(int health = 10, int shieldHealth = 0)
     {
         var hitEffect = new GameObject("HitEffect_Test");
         var destructionVFX = new GameObject("DestructionVFX_Test");
         var projectilePrefab = new GameObject("Projectile_Test");
 
         // Build the GameObject inactive so AddComponent<Enemy>() does NOT fire
-        // Awake() yet — Awake constructs EnemyHealthSystem from the `health`
-        // field, so that field must be set BEFORE Awake runs, not after.
+        // Awake() yet — Awake constructs EnemyHealthSystem (and ShieldSystem) from
+        // the `health`/`shieldHealth` fields, so those must be set BEFORE Awake
+        // runs, not after.
         var root = new GameObject("Enemy_Test");
         root.SetActive(false);
         var enemy = root.AddComponent<Enemy>();
         enemy.health = health;
+        enemy.shieldHealth = shieldHealth;
         enemy.hitEffect = hitEffect;
         enemy.destructionVFX = destructionVFX;
         enemy.Projectile = projectilePrefab;
-        root.SetActive(true); // now Awake() runs, reading the correct health value
+        root.SetActive(true); // now Awake() runs, reading the correct health/shield values
 
         return new EnemyComponents
         {
