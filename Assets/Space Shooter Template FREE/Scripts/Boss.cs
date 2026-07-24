@@ -30,6 +30,12 @@ public class Boss : MonoBehaviour, IDamageable
         _healthSystem = new EnemyHealthSystem(health);
     }
 
+    private void Start()
+    {
+        if (MusicManager.instance != null)
+            MusicManager.instance.PlayBossMusic();
+    }
+
     public void GetDamage(int damage)
     {
         if (damage <= 0)
@@ -52,6 +58,8 @@ public class Boss : MonoBehaviour, IDamageable
     private void Destruction()
     {
         Instantiate(destructionVFX, transform.position, Quaternion.identity);
+        if (MusicManager.instance != null)
+            MusicManager.instance.PlayLevelMusic();
         Destroy(gameObject);
     }
 }
