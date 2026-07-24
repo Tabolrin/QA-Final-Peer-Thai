@@ -27,6 +27,21 @@ public class ShieldTests
     }
 
     [UnityTest]
+    public IEnumerator Enemy_WithShield_ShowsHitEffect_EvenWhenHitIsFullyAbsorbed()
+    {
+        var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 10, shieldHealth: 5);
+        yield return null;
+
+        enemy.Enemy.GetDamage(3); // fully absorbed by the shield
+        yield return null;
+
+        Assert.Greater(enemy.Enemy.transform.childCount, 0,
+            "A shield-absorbed hit should still play the hit effect, so the player gets feedback that the shot landed.");
+
+        EnemyTestSceneBuilder.DestroyEnemy(enemy);
+    }
+
+    [UnityTest]
     public IEnumerator Enemy_WithShield_OverflowDamage_ReachesHealth_OnceShieldBreaks()
     {
         var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 10, shieldHealth: 5);

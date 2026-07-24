@@ -58,9 +58,17 @@ public class Enemy : MonoBehaviour {
     //method of getting damage for the 'Enemy'
     public void GetDamage(int damage)
     {
+        if (damage <= 0)
+            return; // not a real hit - nothing to apply, nothing to show
+
         int remainingDamage = _shieldSystem != null ? _shieldSystem.AbsorbDamage(damage) : damage;
         if (remainingDamage <= 0)
-            return; // fully absorbed by the shield - health is untouched
+        {
+            // shield absorbed the whole hit: health is untouched, but still
+            // show the hit effect so the player gets feedback that it landed
+            Instantiate(hitEffect, transform.position, Quaternion.identity, transform);
+            return;
+        }
 
         _healthSystem.TakeDamage(remainingDamage);
         health = _healthSystem.CurrentHealth; //keep inspector-visible field in sync
