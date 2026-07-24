@@ -7,7 +7,7 @@ using UnityEngine;
 /// Health/damage logic lives in EnemyHealthSystem (plain C#, unit-tested separately);
 /// this MonoBehaviour wraps it and keeps the original public API unchanged.
 /// </summary>
-public class Enemy : MonoBehaviour {
+public class Enemy : MonoBehaviour, IDamageable {
 
     #region FIELDS
     [Tooltip("Health points in integer")]
