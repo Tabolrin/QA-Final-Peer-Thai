@@ -18,6 +18,11 @@ public class PlayerMoving : MonoBehaviour {
 
     [Tooltip("offset from viewport borders for player's movement")]
     public Borders borders;
+
+    [Tooltip("half-width of the actual designed play field (enemy wave paths span roughly -8.8..8.2) - " +
+             "caps horizontal movement so it never exceeds this even on a wide/landscape viewport")]
+    public float contentHalfWidth = 9.5f;
+
     Camera mainCamera;
     bool controlIsActive = true; 
 
@@ -68,12 +73,15 @@ public class PlayerMoving : MonoBehaviour {
         }
     }
 
-    //setting 'Player's' movement borders according to Viewport size and defined offset
-    void ResizeBorders() 
+    //setting 'Player's' movement borders according to Viewport size and defined offset,
+    //capped to the actual play field so a wide viewport can't extend past where enemies fly
+    void ResizeBorders()
     {
-        borders.minX = mainCamera.ViewportToWorldPoint(Vector2.zero).x + borders.minXOffset;
+        float viewportMinX = mainCamera.ViewportToWorldPoint(Vector2.zero).x + borders.minXOffset;
+        float viewportMaxX = mainCamera.ViewportToWorldPoint(Vector2.right).x - borders.maxXOffset;
+        borders.minX = PlayFieldBounds.ClampMin(viewportMinX, contentHalfWidth);
+        borders.maxX = PlayFieldBounds.ClampMax(viewportMaxX, contentHalfWidth);
         borders.minY = mainCamera.ViewportToWorldPoint(Vector2.zero).y + borders.minYOffset;
-        borders.maxX = mainCamera.ViewportToWorldPoint(Vector2.right).x - borders.maxXOffset;
         borders.maxY = mainCamera.ViewportToWorldPoint(Vector2.up).y - borders.maxYOffset;
     }
 }
