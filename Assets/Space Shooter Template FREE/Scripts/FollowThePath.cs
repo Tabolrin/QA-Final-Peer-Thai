@@ -15,11 +15,13 @@ public class FollowThePath : MonoBehaviour {
     float currentPathPercent;               //current percentage of completing the path
     Vector3[] pathPositions;                //path points in vector3
     [HideInInspector] public bool movingIsActive;   //whether 'Enemy' moves or not
+    [HideInInspector] public bool movingForward = true;   //when looping, whether currently retracing the path backward or forward
 
     //setting path parameters for the 'Enemy' and sending the 'Enemy' to the path starting point
-    public void SetPath() 
+    public void SetPath()
     {
         currentPathPercent = 0;
+        movingForward = true;
         pathPositions = new Vector3[path.Length];       //transform path points to vector3
         for (int i = 0; i < pathPositions.Length; i++)
         {
@@ -35,23 +37,19 @@ public class FollowThePath : MonoBehaviour {
     {
         if (movingIsActive)
         {
-            currentPathPercent += speed / 100 * Time.deltaTime;     //every update calculating current path percentage according to the defined speed
+            currentPathPercent += (movingForward ? 1 : -1) * speed / 100 * Time.deltaTime;     //every update calculating current path percentage according to the defined speed
 
             transform.position = NewPositionByPath(pathPositions, currentPathPercent); //moving the 'Enemy' to the path position, calculated in method NewPositionByPath
             if (rotationByPath)                            //rotating the 'Enemy' in path direction, if set 'rotationByPath'
             {
-                transform.right = Interpolate(CreatePoints(pathPositions), currentPathPercent + 0.01f) - transform.position;
+                float lookAheadPercent = currentPathPercent + (movingForward ? 0.01f : -0.01f);
+                transform.right = Interpolate(CreatePoints(pathPositions), lookAheadPercent) - transform.position;
                 transform.Rotate(Vector3.forward * 90);
             }
-            if (currentPathPercent > 1)                    //when the path is complete
-            {
-                if (loop)                                   //when loop is set, moving to the path starting point; if not, destroying or deactivating the 'Enemy'
-                    currentPathPercent = 0;
-                else
-                {
-                    Destroy(gameObject);           
-                }
-            }
+            //when loop is set, retrace the path backward at either end instead of teleporting to the start
+            currentPathPercent = PathLoopMotion.ClampAndReverseIfNeeded(currentPathPercent, loop, ref movingForward, out bool shouldDestroy);
+            if (shouldDestroy)
+                Destroy(gameObject);
         }
     }
 
