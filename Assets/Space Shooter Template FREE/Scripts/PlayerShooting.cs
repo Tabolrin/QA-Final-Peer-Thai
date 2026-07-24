@@ -27,9 +27,16 @@ public class PlayerShooting : MonoBehaviour {
     [Range(1, 4)]       //change it if you wish
     public int weaponPower = 1; 
 
+    [Tooltip("Sound played each time the player fires, with a small random pitch shift so it doesn't sound identical every shot")]
+    public AudioClip laserShotSfx;
+    [Range(0f, 0.5f)]
+    [Tooltip("How far the pitch can randomly shift up or down from 1.0 on each shot")]
+    public float laserShotPitchVariance = 0.08f;
+    AudioSource audioSource;
+
     public Guns guns;
-    bool shootingIsActive = true; 
-    [HideInInspector] public int maxweaponPower = 4; 
+    bool shootingIsActive = true;
+    [HideInInspector] public int maxweaponPower = 4;
     public static PlayerShooting instance;
 
     private void Awake()
@@ -43,6 +50,7 @@ public class PlayerShooting : MonoBehaviour {
         guns.leftGunVFX = guns.leftGun.GetComponent<ParticleSystem>();
         guns.rightGunVFX = guns.rightGun.GetComponent<ParticleSystem>();
         guns.centralGunVFX = guns.centralGun.GetComponent<ParticleSystem>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     private void Update()
@@ -51,10 +59,20 @@ public class PlayerShooting : MonoBehaviour {
         {
             if (Time.time > nextFire)
             {
-                MakeAShot();                                                         
+                MakeAShot();
+                PlayLaserShotSfx();
                 nextFire = Time.time + 1 / fireRate;
             }
         }
+    }
+
+    //plays the laser SFX with a slight random pitch shift so repeated shots don't sound identical
+    void PlayLaserShotSfx()
+    {
+        if (audioSource == null || laserShotSfx == null)
+            return;
+        audioSource.pitch = 1f + Random.Range(-laserShotPitchVariance, laserShotPitchVariance);
+        audioSource.PlayOneShot(laserShotSfx);
     }
 
     //method for a shot
