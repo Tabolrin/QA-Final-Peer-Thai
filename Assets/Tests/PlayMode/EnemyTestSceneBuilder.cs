@@ -17,6 +17,7 @@ public static class EnemyTestSceneBuilder
         public GameObject HitEffect;
         public GameObject DestructionVFX;
         public GameObject ProjectilePrefab;
+        public GameObject ShieldIndicator;
     }
 
     public static EnemyComponents CreateEnemy(int health = 10, int shieldHealth = 0)
@@ -32,12 +33,16 @@ public static class EnemyTestSceneBuilder
         var root = new GameObject("Enemy_Test");
         root.SetActive(false);
         root.AddComponent<SpriteRenderer>();
+        var shieldIndicator = new GameObject("ShieldIndicator_Test");
+        shieldIndicator.transform.SetParent(root.transform);
+        shieldIndicator.AddComponent<SpriteRenderer>();
         var enemy = root.AddComponent<Enemy>();
         enemy.health = health;
         enemy.shieldHealth = shieldHealth;
         enemy.hitEffect = hitEffect;
         enemy.destructionVFX = destructionVFX;
         enemy.Projectile = projectilePrefab;
+        enemy.shieldIndicator = shieldIndicator;
         root.SetActive(true); // now Awake() runs, reading the correct health/shield values
 
         return new EnemyComponents
@@ -46,7 +51,8 @@ public static class EnemyTestSceneBuilder
             Enemy = enemy,
             HitEffect = hitEffect,
             DestructionVFX = destructionVFX,
-            ProjectilePrefab = projectilePrefab
+            ProjectilePrefab = projectilePrefab,
+            ShieldIndicator = shieldIndicator
         };
     }
 
@@ -55,6 +61,6 @@ public static class EnemyTestSceneBuilder
         if (enemy.HitEffect != null) Object.Destroy(enemy.HitEffect);
         if (enemy.DestructionVFX != null) Object.Destroy(enemy.DestructionVFX);
         if (enemy.ProjectilePrefab != null) Object.Destroy(enemy.ProjectilePrefab);
-        if (enemy.Root != null) Object.Destroy(enemy.Root);
+        if (enemy.Root != null) Object.Destroy(enemy.Root); // destroys ShieldIndicator too (it's a child)
     }
 }

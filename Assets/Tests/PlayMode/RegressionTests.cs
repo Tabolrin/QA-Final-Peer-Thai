@@ -55,11 +55,16 @@ public class RegressionTests
         var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 10);
         yield return null;
 
+        // baseline includes the (inactive, unrelated) ShieldIndicator child every
+        // enemy has - the assertion below checks nothing NEW was added, not that
+        // there are zero children outright.
+        int childCountBefore = enemy.Enemy.transform.childCount;
+
         enemy.Enemy.GetDamage(0);
         enemy.Enemy.GetDamage(-5);
         yield return null;
 
-        Assert.AreEqual(0, enemy.Enemy.transform.childCount,
+        Assert.AreEqual(childCountBefore, enemy.Enemy.transform.childCount,
             "Zero or negative damage is not a real hit and should not instantiate the hit effect.");
 
         EnemyTestSceneBuilder.DestroyEnemy(enemy);

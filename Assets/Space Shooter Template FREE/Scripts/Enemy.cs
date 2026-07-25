@@ -28,6 +28,10 @@ public class Enemy : MonoBehaviour, IDamageable {
 
     [Tooltip("Sprite color to reset a shielded enemy to once its shield breaks, so it visually reads as a normal enemy")]
     public Color NormalEnemyColor = Color.white;
+
+    [Tooltip("Non-color shield cue (e.g. a ring sprite) shown while shieldHealth > 0, hidden once the shield breaks - " +
+             "so shielded-vs-not doesn't rely on color alone")]
+    public GameObject shieldIndicator;
     #endregion
 
     private EnemyHealthSystem _healthSystem;
@@ -45,6 +49,8 @@ public class Enemy : MonoBehaviour, IDamageable {
         if (shieldHealth > 0)
             _shieldSystem = new ShieldSystem(shieldHealth);
         _spriteRenderer = GetComponent<SpriteRenderer>();
+        if (shieldIndicator != null)
+            shieldIndicator.SetActive(_shieldSystem != null);
     }
 
     private void Start()
@@ -76,6 +82,8 @@ public class Enemy : MonoBehaviour, IDamageable {
             _shieldBrokenVisualApplied = true;
             if (_spriteRenderer != null)
                 _spriteRenderer.color = NormalEnemyColor;
+            if (shieldIndicator != null)
+                shieldIndicator.SetActive(false);
         }
 
         if (remainingDamage <= 0)

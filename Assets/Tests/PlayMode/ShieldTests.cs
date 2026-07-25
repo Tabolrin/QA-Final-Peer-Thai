@@ -136,6 +136,50 @@ public class ShieldTests
     }
 
     [UnityTest]
+    public IEnumerator Enemy_WithShield_ShowsShieldIndicator_WhileShieldHolds()
+    {
+        var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 2, shieldHealth: 5);
+        yield return null;
+
+        Assert.IsTrue(enemy.ShieldIndicator.activeSelf,
+            "A shielded enemy should show its shield indicator (a non-color cue) as long as the shield holds.");
+
+        EnemyTestSceneBuilder.DestroyEnemy(enemy);
+    }
+
+    [UnityTest]
+    public IEnumerator Enemy_WithoutShield_NeverShowsShieldIndicator()
+    {
+        var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 10); // no shield
+        yield return null;
+
+        Assert.IsFalse(enemy.ShieldIndicator.activeSelf,
+            "A regular enemy has no shield, so its shield indicator should never be shown.");
+
+        EnemyTestSceneBuilder.DestroyEnemy(enemy);
+    }
+
+    [UnityTest]
+    public IEnumerator Enemy_WithShield_HidesShieldIndicator_OnceShieldBreaks()
+    {
+        var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 2, shieldHealth: 5);
+        yield return null;
+
+        for (int hit = 1; hit <= 4; hit++)
+        {
+            enemy.Enemy.GetDamage(1);
+            yield return null;
+        }
+        Assert.IsTrue(enemy.ShieldIndicator.activeSelf, "Indicator should still be showing before the shield breaks.");
+
+        enemy.Enemy.GetDamage(1); // 5th hit - shield now exactly depleted
+        yield return null;
+        Assert.IsFalse(enemy.ShieldIndicator.activeSelf, "Indicator should hide the moment the shield breaks.");
+
+        EnemyTestSceneBuilder.DestroyEnemy(enemy);
+    }
+
+    [UnityTest]
     public IEnumerator Enemy_WithShield_CanStillBeDestroyed_ByLethalOverflowDamage()
     {
         var enemy = EnemyTestSceneBuilder.CreateEnemy(health: 5, shieldHealth: 5);
