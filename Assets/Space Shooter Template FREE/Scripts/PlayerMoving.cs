@@ -23,6 +23,10 @@ public class PlayerMoving : MonoBehaviour {
              "caps horizontal movement so it never exceeds this even on a wide/landscape viewport")]
     public float contentHalfWidth = 9.5f;
 
+    [Tooltip("Accessibility: keyboard movement speed, for players who have difficulty holding the " +
+             "mouse button down continuously - arrow keys / WASD move the ship as an alternative to the mouse")]
+    public float keyboardMoveSpeed = 12f;
+
     Camera mainCamera;
     bool controlIsActive = true; 
 
@@ -46,7 +50,16 @@ public class PlayerMoving : MonoBehaviour {
         {
 #if UNITY_STANDALONE || UNITY_EDITOR || UNITY_WEBGL    //if the current platform is not mobile, setting mouse handling
 
-            if (Input.GetMouseButton(0)) //if mouse button was pressed       
+            Vector2 keyboardInput = GetKeyboardInput();
+            if (keyboardInput != Vector2.zero)
+            {
+                // Accessibility: keyboard is an alternative to the mouse, not a replacement for it -
+                // some players find holding a mouse button down and tracking the cursor difficult;
+                // discrete key presses give them the same movement without that requirement.
+                Vector3 keyboardTarget = transform.position + (Vector3)(keyboardInput * keyboardMoveSpeed * Time.deltaTime);
+                transform.position = Vector3.MoveTowards(transform.position, keyboardTarget, 30 * Time.deltaTime);
+            }
+            else if (Input.GetMouseButton(0)) //if mouse button was pressed
             {
                 Vector3 mousePosition = mainCamera.ScreenToWorldPoint(Input.mousePosition); //calculating mouse position in the worldspace
                 mousePosition.z = transform.position.z;
@@ -71,6 +84,20 @@ public class PlayerMoving : MonoBehaviour {
                 0
                 );
         }
+    }
+
+    //accessibility: arrow keys and WASD as an alternative movement input to the mouse
+    Vector2 GetKeyboardInput()
+    {
+        float horizontal = 0f;
+        if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A)) horizontal -= 1f;
+        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D)) horizontal += 1f;
+
+        float vertical = 0f;
+        if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S)) vertical -= 1f;
+        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)) vertical += 1f;
+
+        return new Vector2(horizontal, vertical);
     }
 
     //setting 'Player's' movement borders according to Viewport size and defined offset,
