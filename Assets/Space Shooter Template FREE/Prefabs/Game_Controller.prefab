@@ -309,6 +309,9 @@ MonoBehaviour:
   - {fileID: 1868464169396128, guid: 284631a95d42dc047b90d8af25ac4457, type: 2}
   timeBetweenPlanets: 15
   planetsSpeed: -1
+  nextSceneName: Level2
+  levelCompleteCheckBuffer: 1
+  levelCompletePollInterval: 0.5
 --- !u!114 &114153425771583984
 MonoBehaviour:
   m_ObjectHideFlags: 1

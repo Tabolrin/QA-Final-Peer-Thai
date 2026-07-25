@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 #region Serializable classes
 [System.Serializable]
@@ -27,18 +28,50 @@ public class LevelController : MonoBehaviour {
     public float planetsSpeed;
     List<GameObject> planetsList = new List<GameObject>();
 
-    Camera mainCamera;   
+    [Tooltip("Scene to load immediately once every wave has spawned and no enemies are left - " +
+             "leave empty if this level has no follow-up (e.g. the final level)")]
+    public string nextSceneName;
+
+    [Tooltip("Extra seconds to wait after the last wave's expected spawn window, before starting " +
+             "to check whether the level is clear - covers frame/instantiate timing slack")]
+    public float levelCompleteCheckBuffer = 1f;
+
+    [Tooltip("How often to re-check for an empty battlefield once the wait above has elapsed")]
+    public float levelCompletePollInterval = 0.5f;
+
+    Camera mainCamera;
 
     private void Start()
     {
         mainCamera = Camera.main;
         //for each element in 'enemyWaves' array creating coroutine which generates the wave
-        for (int i = 0; i<enemyWaves.Length; i++) 
+        for (int i = 0; i<enemyWaves.Length; i++)
         {
             StartCoroutine(CreateEnemyWave(enemyWaves[i].timeToStart, enemyWaves[i].wave));
         }
         StartCoroutine(PowerupBonusCreation());
         StartCoroutine(PlanetsCreation());
+        if (!string.IsNullOrEmpty(nextSceneName))
+            StartCoroutine(WatchForLevelCompletion());
+    }
+
+    //waits until every configured wave has had its full spawn window pass, then polls
+    //until no enemies are left, then moves straight to the next scene
+    IEnumerator WatchForLevelCompletion()
+    {
+        float allWavesSpawnedByTime = 0f;
+        foreach (EnemyWaves ew in enemyWaves)
+        {
+            Wave waveComponent = ew.wave != null ? ew.wave.GetComponent<Wave>() : null;
+            float waveSpawnDuration = waveComponent != null ? waveComponent.count * waveComponent.timeBetween : 0f;
+            allWavesSpawnedByTime = Mathf.Max(allWavesSpawnedByTime, ew.timeToStart + waveSpawnDuration);
+        }
+        yield return new WaitForSeconds(allWavesSpawnedByTime + levelCompleteCheckBuffer);
+
+        while (!LevelCompletion.IsComplete(true, GameObject.FindGameObjectsWithTag("Enemy").Length))
+            yield return new WaitForSeconds(levelCompletePollInterval);
+
+        SceneManager.LoadScene(nextSceneName);
     }
     
     //Create a new wave after a delay
