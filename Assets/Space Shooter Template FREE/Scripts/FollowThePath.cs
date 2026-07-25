@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using System;
+﻿using UnityEngine;
 
 /// <summary>
 /// This script moves the ‘Enemy’ along the defined path.
@@ -39,56 +36,28 @@ public class FollowThePath : MonoBehaviour {
         {
             currentPathPercent += (movingForward ? 1 : -1) * speed / 100 * Time.deltaTime;     //every update calculating current path percentage according to the defined speed
 
+            //clamp/reverse BEFORE using the value to compute position - otherwise a percent
+            //that overshoots past 0 while reversing gets used for one frame while still
+            //negative, which throws IndexOutOfRangeException inside Interpolate
+            currentPathPercent = PathLoopMotion.ClampAndReverseIfNeeded(currentPathPercent, loop, ref movingForward, out bool shouldDestroy);
+            if (shouldDestroy)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
             transform.position = NewPositionByPath(pathPositions, currentPathPercent); //moving the 'Enemy' to the path position, calculated in method NewPositionByPath
             if (rotationByPath)                            //rotating the 'Enemy' in path direction, if set 'rotationByPath'
             {
-                float lookAheadPercent = currentPathPercent + (movingForward ? 0.01f : -0.01f);
-                transform.right = Interpolate(CreatePoints(pathPositions), lookAheadPercent) - transform.position;
+                float lookAheadPercent = Mathf.Clamp01(currentPathPercent + (movingForward ? 0.01f : -0.01f));
+                transform.right = CatmullRomPath.Interpolate(CatmullRomPath.CreatePoints(pathPositions), lookAheadPercent) - transform.position;
                 transform.Rotate(Vector3.forward * 90);
             }
-            //when loop is set, retrace the path backward at either end instead of teleporting to the start
-            currentPathPercent = PathLoopMotion.ClampAndReverseIfNeeded(currentPathPercent, loop, ref movingForward, out bool shouldDestroy);
-            if (shouldDestroy)
-                Destroy(gameObject);
         }
     }
 
-    Vector3 NewPositionByPath(Vector3 [] pathPos, float percent) 
+    Vector3 NewPositionByPath(Vector3 [] pathPos, float percent)
     {
-        return Interpolate(CreatePoints(pathPos), currentPathPercent);
-    }
-
-    Vector3 Interpolate(Vector3[] path, float t) 
-    {
-        int numSections = path.Length - 3;
-        int currPt = Mathf.Min(Mathf.FloorToInt(t * numSections), numSections - 1);
-        float u = t * numSections - currPt;
-        Vector3 a = path[currPt];
-        Vector3 b = path[currPt + 1];
-        Vector3 c = path[currPt + 2];
-        Vector3 d = path[currPt + 3];
-        return 0.5f * ((-a + 3f * b - 3f * c + d) * (u * u * u) + (2f * a - 5f * b + 4f * c - d) * (u * u) + (-a + c) * u + 2f * b);
-    }
-
-    Vector3[] CreatePoints(Vector3[] path) 
-    {
-        Vector3[] pathPositions;
-        Vector3[] newPathPos;
-        int dist = 2;
-        pathPositions = path;
-        newPathPos = new Vector3[pathPositions.Length + dist];
-        Array.Copy(pathPositions, 0, newPathPos, 1, pathPositions.Length);
-        newPathPos[0] = newPathPos[1] + (newPathPos[1] - newPathPos[2]);
-        newPathPos[newPathPos.Length - 1] = newPathPos[newPathPos.Length - 2] + (newPathPos[newPathPos.Length - 2] - newPathPos[newPathPos.Length - 3]);
-        if (newPathPos[1] == newPathPos[newPathPos.Length - 2])
-        {
-            Vector3[] LoopSpline = new Vector3[newPathPos.Length];
-            Array.Copy(newPathPos, LoopSpline, newPathPos.Length);
-            LoopSpline[0] = LoopSpline[LoopSpline.Length - 3];
-            LoopSpline[LoopSpline.Length - 1] = LoopSpline[2];
-            newPathPos = new Vector3[LoopSpline.Length];
-            Array.Copy(LoopSpline, newPathPos, LoopSpline.Length);
-        }
-        return (newPathPos);
+        return CatmullRomPath.Interpolate(CatmullRomPath.CreatePoints(pathPos), percent);
     }
 }
