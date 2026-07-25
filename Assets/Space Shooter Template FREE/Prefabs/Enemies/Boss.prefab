@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 58425179734721643}
   - component: {fileID: 114640587493707363}
   - component: {fileID: 50267448758737773}
+  - component: {fileID: 114640587493707364}
   m_Layer: 0
   m_Name: Boss
   m_TagString: Enemy
@@ -191,3 +192,20 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &114640587493707364
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1373690366928949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0cc702e7d10a644d88518e1e69f27d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  orbProjectile: {fileID: 1728936453619090, guid: 9610b32634c0355409b4b5991571a66b,
+    type: 3}
+  orbsPerVolley: 3
+  spreadDegrees: 15
+  fireInterval: 2.5
